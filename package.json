@@ -4,6 +4,8 @@
   "description": "Tienda online profesional para componentes gaming",
   "private": true,
   "scripts": {
+    "start": "cd backend && npm run start",
+    "build": "cd backend && npm ci && npx prisma generate --schema=./prisma/schema.prisma && npm run build",
   "dev:all": "npm run sync:cloudinary && concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
