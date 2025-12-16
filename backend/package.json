@@ -9,10 +9,14 @@
     "start": "node dist/server.js",
     "seed": "ts-node prisma/seed.ts",
     "migrate": "prisma migrate dev",
-    "migrate:deploy": "prisma migrate deploy",
-    "generate": "prisma generate",
+    "migrate:deploy": "prisma migrate deploy --schema=./prisma/schema.prisma",
+    "generate": "prisma generate --schema=./prisma/schema.prisma",
     "studio": "prisma studio",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate --schema=./prisma/schema.prisma"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma",
+    "seed": "ts-node prisma/seed.ts"
   },
   "keywords": [],
   "author": "",
