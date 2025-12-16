@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:17.4
+    container_name: gaming_store_postgres_prod
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin}
+      POSTGRES_DB: gaming_store
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    networks:
+      - gaming_store_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: gaming_store_redis_prod
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - gaming_store_network
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_prod_data:/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gaming_store_backend_prod
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-admin}@postgres:5432/gaming_store?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      PORT: 3001
+      NODE_ENV: production
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - gaming_store_network
+    command: sh -c "npx prisma migrate deploy && npm start"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gaming_store_frontend_prod
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NUXT_PUBLIC_API_URL: ${NUXT_PUBLIC_API_URL:-http://localhost:3001/api}
+      NUXT_PUBLIC_STRIPE_KEY: ${NUXT_PUBLIC_STRIPE_KEY}
+      NUXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${NUXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
+      NODE_ENV: production
+    depends_on:
+      - backend
+    networks:
+      - gaming_store_network
+
+volumes:
+  postgres_prod_data:
+    name: gaming_store_postgres_prod_data
+  redis_prod_data:
+    name: gaming_store_redis_prod_data
+
+networks:
+  gaming_store_network:
+    driver: bridge

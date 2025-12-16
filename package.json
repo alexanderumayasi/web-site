@@ -1,0 +1,31 @@
+{
+  "name": "gaming-store",
+  "version": "1.0.0",
+  "description": "Tienda online profesional para componentes gaming",
+  "private": true,
+  "scripts": {
+  "dev:all": "npm run sync:cloudinary && concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+  "sync:cloudinary": "cd backend && npx ts-node scripts/sync-cloudinary-images.ts",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "build:all": "cd backend && npm run build && cd ../frontend && npm run build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "setup": "npm run docker:up && cd backend && npm install && npx prisma generate && npx prisma migrate dev && npm run seed && cd ../frontend && npm install"
+  },
+  "keywords": [
+    "gaming",
+    "ecommerce",
+    "nuxt3",
+    "express",
+    "prisma",
+    "stripe"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
